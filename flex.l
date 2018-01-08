@@ -7,6 +7,35 @@
   int yylex();
   int yyerror(char* err){
     printf("%s\nLine: %d\n",err,lineno);
+  }
+  int yyerror2(int errNumber,char* varName){
+    switch(errNumber){
+        case 1:
+            printf("Zmienna '%s' nie została zadeklarowana.\n",varName);
+            break;
+        case 2:
+            printf("Zmienna '%s' nie została zainicjowana.\n",varName);
+            break;
+        case 3:
+            printf("Zmienna '%s' nie jest tablicą.\n",varName);
+            break;
+        case 4:
+            printf("Zmienna '%s' jest tablicą.\n",varName);
+            break;
+        case 5:
+            printf("'%s' IndexOfOutBoundsEx\n",varName);
+            break;
+        case 6:
+            printf("'%s' Powtarzająca się deklaracja.\n",varName);
+            break;
+        case 7:
+            printf("Błędne znaki.\n");
+            break;
+        case 8:
+            printf("Niezamknięty komentarz.\n");
+            break;
+    }    
+    printf("Line: %d\n",lineno);
     exit(1);
   }
 %}
@@ -18,7 +47,7 @@ WHITE   [ \t]+
 %%
 
 VAR         return VAR;
-BEGIN       return BEGIN;
+BEGIN       return BEG;
 END         return END;
 
 FOR         return FOR;
@@ -66,12 +95,12 @@ WRITE       return WRITE;
             }
 
 \(                   BEGIN(COMMENT);
-<COMMENT><<EOF>>    yyerror("Nie zakonczony komentarz!");
+<COMMENT><<EOF>>    yyerror2(8,NULL);
 <COMMENT>[^\)]*      ;
 <COMMENT>\)          BEGIN(INITIAL);
 
-.           { yyerror("Błedny znak"); }
-\n          lineno++;
 {WHITE}     ;
+\n          lineno++;
+.           { yyerror2(7,NULL); }
 
 %%

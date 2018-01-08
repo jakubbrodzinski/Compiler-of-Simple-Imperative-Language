@@ -1,0 +1,10 @@
+VAR
+	a b
+BEGIN
+	a:=0;
+	b:=1;
+	WRITE a;
+	WRITE b;
+	READ b;
+	WRITE b;
+END

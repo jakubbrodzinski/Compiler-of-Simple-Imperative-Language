@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifndef VAR_LIST
+#define VAR_LIST
 extern int* memoryArray;
-
 struct variableStack{
     char* varName;
     int varSize;
@@ -29,6 +30,7 @@ int isAlreadyDeclared(char * name){
 }
 /*
  * -1 - already declared
+ *  1 - OK
  */
 int insertNewVariable(char * name,int size,int isArr,int isIterator){
     if(isAlreadyDeclared(name)){
@@ -37,21 +39,26 @@ int insertNewVariable(char * name,int size,int isArr,int isIterator){
     VariableStack* var=(VariableStack*) malloc(sizeof(VariableStack));
     var->varName=(char*) malloc((strlen(name)+1)*sizeof(char));
     strcpy(var->varName,name);
-    if(isArr)
+    if(isArr){
         var->varSize=size;
-    else
+        memoryArray=(int*) realloc(memoryArray,(stackPointer+size+1)*sizeof(int));
+        var->memStart=stackPointer+1;
+        for(int i=stackPointer+1;i<stackPointer+size;i++)
+            memoryArray[i]=-1;
+        memoryArray[stackPointer]=var->memStart;
+        stackPointer+=(size+1);
+        memoryArray[var->memStart-1]=2;
+    
+    }else{
         var->varSize=1;
+        memoryArray=(int*) realloc(memoryArray,(stackPointer+1)*sizeof(int));
+        var->memStart=stackPointer;
+        for(int i=stackPointer;i<stackPointer+size;i++)
+            memoryArray[i]=-1;
+        stackPointer+=1;            
+    }
     var->isArray=isArr;
     var->varType=isIterator;
-
-    var->memStart=stackPointer;
-    memoryArray=(int*) realloc(memoryArray,(stackPointer+size)*sizeof(int));
-    for(int i=stackPointer;i<stackPointer+size;i++)
-        memoryArray[i]=-1;
-    if(isArr)
-        stackPointer+=size;
-    else
-        stackPointer+=1;
 
     var->nextVar=stack;
     stack=var;
@@ -78,6 +85,9 @@ int removeFromTop(){
     if(stack->varType!=1)
         return -1;
     VariableStack* top=stack;
+    if(top->isArray==1){
+            stackPointer=stackPointer-1;
+    }
     stackPointer=stackPointer-(top->varSize);
     memoryArray=(int*) realloc(memoryArray,stackPointer*sizeof(int));
     stack=stack->nextVar;
@@ -94,7 +104,18 @@ VariableStack* getVariableFromMemory(int memoryCell){
     VariableStack* temp=stack;
     if(temp->memStart+temp->varSize-1<memoryCell)
         return NULL;
-    while(temp->memStart>memoryCell)
+    while((temp->isArray==1 && temp->memStart-1>memoryCell) || (temp->isArray==0 && temp->memStart>memoryCell))
         temp=temp->nextVar;
     return temp;
 }
+VariableStack* getVariableByName(char * name){
+    VariableStack* top=stack;
+    while(top!=NULL){
+        if(strcmp(name,top->varName)==0){
+            return top;
+        }
+        top=top->nextVar;
+    }
+    return NULL;
+}
+#endif
