@@ -3,7 +3,7 @@ all: bison.y flex.l
 		flex -o flex.c flex.l
 		gcc -o compiler bison.c flex.c -lm -lfl
 run:
-	./compiler < test${NO}.imp
+	./compiler < ./myTest/test${NO}.imp
 	./interpreter/interpreter output;		
 clean:
 	rm -f bison.c bison.h flex.c compiler

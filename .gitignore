@@ -50,6 +50,9 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# MyData
 bison.h
 bison.c
 flex.c
+compiler
