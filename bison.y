@@ -19,6 +19,10 @@ void construct(int s);
 void cleanUp();
 void writeIntoFile(char* filename);
 
+#include "jumpStack.c"
+void pushJump(int lineN);
+void cleanJumpStack();
+int popJump();
 
 int yyerror(char* error);
 int yyerror2(int errNumber,char* varName);
@@ -92,6 +96,8 @@ command         : identifier AS expression ENDL
                         }else{
                             insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
                         }   
+                    }else{
+                        $<retVar>3.varName=NULL;
                     }
                     if($<retVar>1.isDirect==1){
                         insertSingleCommand(lineNumber++,"STORE",$<retVar>1.memAddress);
@@ -155,6 +161,20 @@ expression      : value
                     
                 }
                 | value SUB value
+                {
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                    }
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
+                    }
+                    $<retVar>$.varName="ACC";
+                }
                 | value MUL value
                 | value DIV value
                 | value MOD value

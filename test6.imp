@@ -1,0 +1,17 @@
+VAR
+	a b c d e f
+BEGIN
+	a:=1;
+	b:=3;
+	c:=5;
+	e:=10;
+	b:=c+e;
+	WRITE b;
+	b:=e+c;
+	WRITE b;
+	f:=c-e;
+	WRITE f;
+	f:=e-c;
+	WRITE f;
+	WRITE 256;
+END
