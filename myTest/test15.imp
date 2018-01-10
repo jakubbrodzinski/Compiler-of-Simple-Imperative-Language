@@ -1,0 +1,9 @@
+VAR
+	a b
+BEGIN
+	a:=0;
+	WHILE a<10 DO
+		WRITE a;
+		a:=a+1;
+	ENDWHILE
+END

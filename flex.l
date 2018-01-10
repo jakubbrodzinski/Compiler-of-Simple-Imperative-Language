@@ -34,6 +34,9 @@
         case 8:
             printf("Niezamknięty komentarz.\n");
             break;
+        case 9:
+            printf("Modyfikowany iterator pętli '%s'\n",varName);
+            break;
     }    
     printf("Line: %d\n",lineno);
     exit(1);

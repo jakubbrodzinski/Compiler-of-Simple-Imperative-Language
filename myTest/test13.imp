@@ -1,0 +1,14 @@
+VAR
+   a[3] b
+BEGIN
+	b:=0;
+   FOR i FROM 2 DOWNTO 0 DO
+       READ a[i];
+   ENDFOR
+   FOR j FROM 0 TO 2 DO
+	FOR z FROM 5 DOWNTO 0 DO
+       WRITE a[j];
+	ENDFOR
+	WRITE b;
+   ENDFOR
+END

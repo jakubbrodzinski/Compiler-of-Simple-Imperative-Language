@@ -65,6 +65,26 @@ int insertNewVariable(char * name,int size,int isArr,int isIterator){
     return 1;
 }
 
+int insertLoopRange(int loopC){
+    VariableStack* var=(VariableStack*) malloc(sizeof(VariableStack));
+    var->varName=(char*) malloc(4*sizeof(char));
+    var->varName[0]='I';
+    var->varName[1]='T';
+    var->varName[2]=loopC+48;
+    var->varName[3]='\0';
+    var->varSize=1;
+    memoryArray=(int*) realloc(memoryArray,(stackPointer+1)*sizeof(int));
+    var->memStart=stackPointer;
+    memoryArray[stackPointer]=-1;
+    stackPointer+=1;
+    var->isArray=0;
+    var->varType=1;
+
+    var->nextVar=stack;
+    stack=var;
+    return 1;
+}
+
 void clearStack(){
     VariableStack* temp;
     while(stack!=NULL){

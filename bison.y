@@ -12,6 +12,7 @@ void clearStack();
 VariableStack* getFromTop();
 VariableStack* getVariableFromMemory(int memoryCell); 
 VariableStack* getVariableByName(char * name);
+int insertLoopRange(int loopC);
 #include "commandArray.c"
 struct SingleCommand* getSingleCommandByIndex(int index);
 struct SingleCommand* insertSingleCommand(int index,char* com,int a);
@@ -29,8 +30,14 @@ int yyerror2(int errNumber,char* varName);
 int yylex();
 void insertNumberIntoAccumulator(unsigned long long value);
 
-int reg=0;
+int reg=0;  //ktory aktualnie rejestr uzyć. mod 4
+int regMax=4;
 int lineNumber=0;
+int loopCounter=0; // ktora to jest petla, tylko i wylacnzie do nazywania zmiennych na stosie
+int inWhileLoop=0; // inne zachowanie condition jezeli jest rowne 1
+int numberLoaded=0; // do while'a, jezeli warunek zawiera "szytwna" liczbe to wrzucamy ja na stack'a z variableStack
+
+extern int stackPointer;
 
 %}
 
@@ -90,6 +97,10 @@ command         : identifier AS expression ENDL
                 {
                     printf("command1.isDrect=%d\n",$<retVar>1.isDirect);
                     printf("command2.isDrect=%d\n",$<retVar>2.isDirect);
+                    VariableStack* var=getVariableByName($<retVar>1.varName);
+                    if(var->varType==1){
+                        yyerror2(9,$<retVar>1.varName);
+                    }
                     if($<retVar>3.varName !=NULL && strcmp($<retVar>3.varName,"ACC")!=0){
                         if($<retVar>3.isDirect==1){
                             insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
@@ -109,9 +120,163 @@ command         : identifier AS expression ENDL
                 }
                 | IF condition THEN commands ELSE commands ENDIF
                 | IF condition THEN commands ENDIF
-                | WHILE condition DO commands ENDWHILE
-                | FOR V FROM value TO value DO commands ENDFOR
-                | FOR V FROM value DOWNTO value DO commands ENDFOR
+                | WHILE 
+                {
+                    inWhileLoop=1;
+
+                }
+                condition 
+                {
+                    pushJump(lineNumber);
+                    pushJump(numberLoaded);
+                    insertSingleCommand(lineNumber++,"JZERO",-1);
+                    inWhileLoop=0;
+                    numberLoaded=0;
+                }
+                DO commands ENDWHILE
+                {
+                    int numberL=popJump();
+                    int afterCond=popJump();
+                    int beforeCond=popJump();
+                    insertSingleCommand(lineNumber++,"JUMP",beforeCond);
+                    getSingleCommandByIndex(afterCond)->arg=lineNumber;
+                    while(numberL>0){
+                        if(removeFromTop()==-1){
+                            printf("PROBLEM Z WHILE!!!\n");
+                        }
+                        numberL--;
+                    }
+                }
+                | FOR V FROM value TO value 
+                {
+                    if($<retVar>4.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>4.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>4.memAddress);
+                    }
+                    if($<retVar>6.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>6.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>6.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3); // zmiana
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+7);    //zmiana
+                    lineNumber++;
+                    
+                    if($<retVar>4.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>4.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>4.memAddress);
+                    }
+                    
+                    if(insertNewVariable($<string>2,1,0,1)==-1){
+                        yyerror2(6,$<string>2);
+                    }
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    memoryArray[stackPointer-1]=0;
+
+                    if($<retVar>6.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>6.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>6.memAddress);
+                    }
+                    if($<retVar>4.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>4.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>4.memAddress);
+                    }
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                    
+                    loopCounter++;
+                    insertLoopRange(loopCounter);
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    memoryArray[stackPointer-1]=0;
+                    pushJump(lineNumber);
+                    insertSingleCommand(lineNumber++,"JZERO",-2);
+                }
+                DO commands ENDFOR
+                {
+                    insertSingleCommand(lineNumber++,"LOAD",stackPointer-2); //load iterator
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-2);//save iterator
+                    insertSingleCommand(lineNumber++,"LOAD",stackPointer-1); //load RANGE
+                    insertSingleCommand(lineNumber++,"DEC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-1);//save RANGE
+                    int jumpLine=popJump();
+                    insertSingleCommand(lineNumber++,"JUMP",jumpLine);
+                    printf("stackPointer ('%s'):%d\n",$<string>2,stackPointer);
+                    struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);
+                    lastJzero->arg=lineNumber;
+                    removeFromTop();
+                    removeFromTop();
+                    
+                }
+                | FOR V FROM value DOWNTO value 
+                {
+                    if($<retVar>4.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>6.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>6.memAddress);
+                    }
+                    if($<retVar>4.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>4.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>4.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3); // zmiana
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+5);    //zmiana
+                    lineNumber++;
+                    
+                    if($<retVar>4.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>4.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>4.memAddress);
+                    }
+                    
+                    if(insertNewVariable($<string>2,1,0,1)==-1){
+                        yyerror2(6,$<string>2);
+                    }
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    memoryArray[stackPointer-1]=0;
+
+                    if($<retVar>6.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>6.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>6.memAddress);
+                    }
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                    //TO-DO!!! zrobic jakis glupi licznik
+                    loopCounter++;
+                    insertLoopRange(loopCounter);
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    memoryArray[stackPointer-1]=0;
+                    pushJump(lineNumber);
+                    insertSingleCommand(lineNumber++,"JZERO",-2);
+                }
+                DO commands ENDFOR
+                {
+                    insertSingleCommand(lineNumber++,"LOAD",stackPointer-2); //load iterator
+                    insertSingleCommand(lineNumber++,"DEC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-2);//save iterator
+                    insertSingleCommand(lineNumber++,"LOAD",stackPointer-1); //load RANGE
+                    insertSingleCommand(lineNumber++,"DEC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",stackPointer-1);//save RANGE
+                    int jumpLine=popJump();
+                    insertSingleCommand(lineNumber++,"JUMP",jumpLine);
+                    printf("stackPointer ('%s'):%d\n",$<string>2,stackPointer);
+                    struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);
+                    lastJzero->arg=lineNumber;
+                    removeFromTop();
+                    removeFromTop();
+                }
                 | READ identifier ENDL
                 {
                     insertSingleCommand(lineNumber++,"GET",-1);
@@ -181,26 +346,190 @@ expression      : value
                 ;
 
 condition       : value EQ value
+                {
+                    if(inWhileLoop==1)
+                        pushJump(lineNumber);
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                    }
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+2);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+4);
+                    lineNumber++;
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                    }
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>1.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+2);
+                    lineNumber++;                
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                }
                 | value NEQ value
+                {
+                    if(inWhileLoop==1)
+                        pushJump(lineNumber);
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                    }
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+2);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+4);
+                    lineNumber++;
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                    }
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>1.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                }
                 | value LE value
+                {
+                    if(inWhileLoop==1)
+                        pushJump(lineNumber);
+                    if($<retVar>3.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                    }
+                    if($<retVar>1.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>1.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                }
                 | value GE value
+                {
+                    if(inWhileLoop==1)
+                        pushJump(lineNumber);
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                    }
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                }
                 | value LEQ value
+                {
+                    if(inWhileLoop==1)
+                        pushJump(lineNumber);
+                    if($<retVar>1.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                    }
+                    if($<retVar>3.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+2);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                }
                 | value GEQ value
+                {
+                    if(inWhileLoop==1)
+                        pushJump(lineNumber);
+                    if($<retVar>3.isDirect==1){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                    }
+                    if($<retVar>1.isDirect==1){
+                        //co jesli to jest array!?
+                        insertSingleCommand(lineNumber++,"SUB",$<retVar>1.memAddress);
+                    }else{
+                        insertSingleCommand(lineNumber++,"SUBI",$<retVar>1.memAddress);
+                    }
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+2);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                }
                 ;
 
 value           : NUMBER
-                {
+                {   
                     insertNumberIntoAccumulator($<value>1);
-                    insertSingleCommand(lineNumber++,"STORE",reg);
-                    $<retVar>$.varName=NULL;
-                    $<retVar>$.isArray=0;
-                    $<retVar>$.memAddress=reg;
-                    $<retVar>$.isDirect=1;
-                    printf("value.isDrect=%d\n",$<retVar>$.isDirect);
-                    reg=(reg+1)%4;
+                    if(inWhileLoop==1){
+                        numberLoaded++;
+                        insertLoopRange(loopCounter++);
+                        $<retVar>$.varName=stack->varName;
+                        $<retVar>$.isArray=0;
+                        $<retVar>$.memAddress=stackPointer-1;
+                        $<retVar>$.isDirect=1;
+                        insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                        //TO-DO
+                    }else{
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        $<retVar>$.varName=NULL;
+                        $<retVar>$.isArray=0;
+                        $<retVar>$.memAddress=reg;
+                        $<retVar>$.isDirect=1;
+                        printf("value.isDrect=%d\n",$<retVar>$.isDirect);
+                        reg=(reg+1)%regMax;
+                    }
                 }
                 | identifier
                 {
+                    if(memoryArray[$<retVar>1.memAddress]==-1){
+                        yyerror2(2,$<retVar>1.varName);
+                    }
                     $<retVar>$.varName=$<retVar>1.varName;
                     $<retVar>$.isArray=$<retVar>1.isArray;
                     $<retVar>$.memAddress=$<retVar>1.memAddress;
@@ -238,15 +567,23 @@ identifier      : V
                     }else if (var1->isArray==0){
                         yyerror2(3,$<string>1);
                     }
-                    printf("%s-%d-%d-%d\n",var3->varName,var3->isArray,var3->memStart,var3->varSize);
+                    
                     insertSingleCommand(lineNumber++,"LOAD",var1->memStart-1);
                     insertSingleCommand(lineNumber++,"ADD",var3->memStart);
-                    insertSingleCommand(lineNumber++,"STORE",reg);
-                    $<retVar>$.varName=var1->varName;
-                    $<retVar>$.isArray=var1->isArray;
-                    $<retVar>$.memAddress=reg;
-                    $<retVar>$.isDirect=0;
-                    reg=(reg+1)%4;
+                    printf("%s-%d-%d-%d\n",var3->varName,var3->isArray,var3->memStart,var3->varSize);
+                    if(inWhileLoop==1){
+                        numberLoaded++;
+                        insertLoopRange(loopCounter++);
+                        memoryArray[stackPointer-1]=0;
+                        $<retVar>$.memAddress=stackPointer-1;
+                    }else{
+                        $<retVar>$.memAddress=reg;
+                        reg=(reg+1)%regMax;
+                    }
+                        $<retVar>$.varName=var1->varName;
+                        $<retVar>$.isArray=var1->isArray;
+                        $<retVar>$.isDirect=0;
+                        insertSingleCommand(lineNumber++,"STORE",$<retVar>$.memAddress);
                 }
                 | V LEFT NUMBER RIGHT
                 {
@@ -296,6 +633,7 @@ int main(){
     insertNewVariable("a2",1,0,0);
     insertNewVariable("a3",1,0,0);
     insertNewVariable("a4",1,0,0);
+    memoryArray[0]=memoryArray[1]=memoryArray[2]=memoryArray[3]=0;
     construct(1000);
     yyparse();
     for(int i=0;i<15;i++){

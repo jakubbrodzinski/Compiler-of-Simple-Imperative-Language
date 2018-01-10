@@ -1,0 +1,9 @@
+VAR
+   a[3]
+BEGIN
+   FOR i FROM 2 DOWNTO 0 DO
+       FOR j FROM 0 TO i DO
+           WRITE i;
+       ENDFOR
+   ENDFOR
+END

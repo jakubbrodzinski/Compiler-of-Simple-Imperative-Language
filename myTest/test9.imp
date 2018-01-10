@@ -1,0 +1,48 @@
+VAR
+	a b c
+BEGIN
+	b:=15;
+	c:=500;
+
+	IF 2>=3 THEN
+		a:=5;
+	ENDIF
+	IF 2>=2 THEN
+		a:=5;
+	ENDIF
+	IF 200>=25 THEN
+		a:=5;
+	ENDIF
+
+	IF 2<=3 THEN
+		a:=5;
+	ENDIF
+	IF 2<=2 THEN
+		a:=5;
+	ENDIF
+	IF 200<=25 THEN
+		a:=5;
+	ENDIF
+
+
+	IF b<=c THEN
+		a:=5;
+	ENDIF
+	IF c<=b THEN
+		a:=5;
+	ENDIF
+	IF b<=b THEN
+		a:=5;
+	ENDIF
+	IF b>=b THEN
+		a:=5;
+	ENDIF
+	IF b>=c THEN
+		a:=5;
+	ENDIF
+	IF c>=b THEN
+		a:=5;
+	ENDIF
+
+END
+
