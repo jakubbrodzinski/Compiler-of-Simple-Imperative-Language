@@ -1,4 +1,4 @@
-( Błąd w linii 5: niewłaściwy znak '-' )
+( Błąd w linii 5: niewłaściwy znak '-' ={WHITE}\*"-"{NUMBER}+   { printf("JD!\n"); })
 VAR
   a b
 BEGIN

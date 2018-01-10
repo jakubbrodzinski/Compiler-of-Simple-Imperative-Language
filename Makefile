@@ -4,7 +4,10 @@ all: bison.y flex.l
 		gcc -o compiler bison.c flex.c -lm -lfl
 run:
 	./compiler < ./myTest/test${NO}.imp
-	./interpreter/interpreter output;		
+	./interpreter/interpreter output;
+err:
+	./compiler < ./test/error${NO}.imp
+	./interpreter/interpreter output;			
 clean:
 	rm -f bison.c bison.h flex.c compiler
 	

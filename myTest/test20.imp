@@ -1,0 +1,15 @@
+VAR
+	a b
+BEGIN
+	a:=2;
+	b:=10;
+	IF 2<3 THEN
+		WRITE a;
+	ENDIF
+
+	IF 2>3 THEN
+		WRITE a;
+	ELSE
+		WRITE b;
+	ENDIF
+END

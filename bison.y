@@ -71,14 +71,12 @@ program         : VAR vdeclarations BEG commands END
 
 vdeclarations   : vdeclarations V
                 { 
-                    printf("deklarcja zmiennej o nazwie %s\n",$<string>2);
                     if(insertNewVariable($<string>2,1,0,0)==-1){
                         yyerror2(6,$<string>2);
                     }
                 }
                 | vdeclarations V LEFT NUMBER RIGHT
                 {
-                    printf("deklarcja zmiennej o nazwie %s[%llu]\n",$<string>2,$<value>4);
                     if(insertNewVariable($<string>2,$<value>4,1,0)==-1){
                         yyerror2(6,$<string>2);
                     }
@@ -95,8 +93,6 @@ commands        : commands command
 
 command         : identifier AS expression ENDL
                 {
-                    printf("command1.isDrect=%d\n",$<retVar>1.isDirect);
-                    printf("command2.isDrect=%d\n",$<retVar>2.isDirect);
                     VariableStack* var=getVariableByName($<retVar>1.varName);
                     if(var->varType==1){
                         yyerror2(9,$<retVar>1.varName);
@@ -118,8 +114,20 @@ command         : identifier AS expression ENDL
                         //niech cała tablica bedzie 1 !!!!
                     }
                 }
-                | IF condition THEN commands ELSE commands ENDIF
-                | IF condition THEN commands ENDIF
+                | IF 
+                {
+                    printf("przed condtion.\n");
+                }
+                condition 
+                {
+                    printf("po condtion\n");
+                    pushJump(lineNumber);
+                    insertSingleCommand(lineNumber++,"JZERO",-1);
+                }
+                THEN comm_gram
+                {
+                    printf("KONIEC WSZYSTKIEGO!\n");
+                }
                 | WHILE 
                 {
                     inWhileLoop=1;
@@ -208,7 +216,6 @@ command         : identifier AS expression ENDL
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);//save RANGE
                     int jumpLine=popJump();
                     insertSingleCommand(lineNumber++,"JUMP",jumpLine);
-                    printf("stackPointer ('%s'):%d\n",$<string>2,stackPointer);
                     struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);
                     lastJzero->arg=lineNumber;
                     removeFromTop();
@@ -271,8 +278,7 @@ command         : identifier AS expression ENDL
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);//save RANGE
                     int jumpLine=popJump();
                     insertSingleCommand(lineNumber++,"JUMP",jumpLine);
-                    printf("stackPointer ('%s'):%d\n",$<string>2,stackPointer);
-                    struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);
+                    struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);      //TO-DO
                     lastJzero->arg=lineNumber;
                     removeFromTop();
                     removeFromTop();
@@ -299,6 +305,37 @@ command         : identifier AS expression ENDL
                     insertSingleCommand(lineNumber++,"PUT",-1);
                 }
                 ;
+comm_gram       : commands 
+                {
+                    printf("po commands\n");
+                    int ifJump=popJump();
+                    struct SingleCommand* jZero=getSingleCommandByIndex(ifJump);      //TO-DO
+                    jZero->arg=lineNumber;
+                }
+                ENDIF 
+                {
+                    printf("ENDIF!\n");
+                }
+                | commands {
+                    printf("po commands\n");
+                    int ifJump=popJump();
+                    pushJump(lineNumber);
+                    insertSingleCommand(lineNumber++,"JUMP",-1);
+                    struct SingleCommand* jZero=getSingleCommandByIndex(ifJump);      //TO-DO
+                    jZero->arg=lineNumber;
+                }
+                ELSE 
+                {
+                    printf("PO ELSIE\n");
+                }
+                commands ENDIF
+                {
+                    printf("KONIEC ELSA\n");
+                    int elseJump=popJump();
+                    struct SingleCommand* elseCommand=getSingleCommandByIndex(elseJump);      //TO-DO
+                    elseCommand->arg=lineNumber;
+                }
+                ;
 
 expression      : value
                 {
@@ -306,8 +343,6 @@ expression      : value
                     $<retVar>$.isArray=$<retVar>1.isArray;
                     $<retVar>$.memAddress=$<retVar>1.memAddress;
                     $<retVar>$.isDirect=$<retVar>1.isDirect;
-                    printf("exp1.isDrect=%d\n",$<retVar>1.isDirect);
-                    printf("exp$.isDrect=%d\n",$<retVar>$.isDirect);
                 }
                 | value ADD value
                 {
@@ -521,7 +556,6 @@ value           : NUMBER
                         $<retVar>$.isArray=0;
                         $<retVar>$.memAddress=reg;
                         $<retVar>$.isDirect=1;
-                        printf("value.isDrect=%d\n",$<retVar>$.isDirect);
                         reg=(reg+1)%regMax;
                     }
                 }
@@ -570,7 +604,7 @@ identifier      : V
                     
                     insertSingleCommand(lineNumber++,"LOAD",var1->memStart-1);
                     insertSingleCommand(lineNumber++,"ADD",var3->memStart);
-                    printf("%s-%d-%d-%d\n",var3->varName,var3->isArray,var3->memStart,var3->varSize);
+                    //printf("%s-%d-%d-%d\n",var3->varName,var3->isArray,var3->memStart,var3->varSize);
                     if(inWhileLoop==1){
                         numberLoaded++;
                         insertLoopRange(loopCounter++);
@@ -593,9 +627,6 @@ identifier      : V
                     }else if (var1->isArray==0){
                         yyerror2(3,$<string>1);
                     }else if(var1->varSize <= $<value>3){
-                        printf("varsize: %d\n",var1->varSize);
-                        insertSingleCommand(lineNumber++,"HALT",-1);
-                        writeIntoFile("outErr");
                         yyerror2(5,$<string>1);
                     }
                     $<retVar>$.varName=var1->varName;
@@ -629,20 +660,20 @@ void insertNumberIntoAccumulator(unsigned long long value){
 }
 
 int main(){
-    insertNewVariable("a1",1,0,0);
-    insertNewVariable("a2",1,0,0);
-    insertNewVariable("a3",1,0,0);
-    insertNewVariable("a4",1,0,0);
+    insertNewVariable("R1",1,0,0);
+    insertNewVariable("R2",1,0,0);
+    insertNewVariable("R3",1,0,0);
+    insertNewVariable("R4",1,0,0);
     memoryArray[0]=memoryArray[1]=memoryArray[2]=memoryArray[3]=0;
     construct(1000);
     yyparse();
-    for(int i=0;i<15;i++){
-        //printf("%d: %s\n",i,getVariableFromMemory(i)->varName);
-    }
     insertSingleCommand(lineNumber++,"HALT",-1);
     writeIntoFile("output");
+    printf("STACK POINTER NA KONIEC: %d\n",stackPointer);
     clearStack();
     cleanUp();
     free(memoryArray);
     return 0;
 }
+
+//TO-DO yyerror i cleanup!
