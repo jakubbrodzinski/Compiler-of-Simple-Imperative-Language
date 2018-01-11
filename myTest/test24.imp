@@ -1,8 +1,26 @@
 VAR
 	a b
 BEGIN
+	a:=74/8;
+	WRITE a;
+	a:=10/2;
+	WRITE a;
 	a:=10/5;
+	WRITE a;
 	b:=56/13;
+	WRITE b;
 	b:=13/5;
+	WRITE b;
 	b:=13/4;
+	WRITE b;
+	b:=3/1;
+	WRITE b;
+	b:=8/2;
+	WRITE b;
+	b:=27/13;
+	WRITE b;
+	b:=2/0;
+	WRITE b;
+	b:=0/2;
+	WRITE b;
 END
