@@ -609,7 +609,7 @@ expression      : value
                     getSingleCommandByIndex(jzeroJumper)->arg=lineNumber;
                 }
                 | value MOD value
-                                {
+                {
                     int right=-1;
                     if($<retVar>3.isDirect==0){
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
@@ -732,31 +732,24 @@ expression      : value
                     insertSingleCommand(lineNumber,"JZERO",lineNumber+2);
                     lineNumber++;
                     //FALSE - wyskakuj zpetli
-                    insertSingleCommand(lineNumber,"JUMP",lineNumber+19);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+12);
                     lineNumber++;
                     //TRUE -odejmij,sprwadz,zmniejsz right
                     //if left >= right
                     insertSingleCommand(lineNumber++,"LOAD",right);
                     insertSingleCommand(lineNumber++,"SUB",left);
-                    insertSingleCommand(lineNumber,"JZERO",lineNumber+5);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+2);
                     lineNumber++;//else
-                    insertSingleCommand(lineNumber++,"LOAD",regStore);
-                    insertSingleCommand(lineNumber++,"SHL",-1);
-                    insertSingleCommand(lineNumber++,"STORE",regStore);
-                    insertSingleCommand(lineNumber,"JUMP",lineNumber+8);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+4);
                     lineNumber++;
                     insertSingleCommand(lineNumber++,"LOAD",left);
                     insertSingleCommand(lineNumber++,"SUB",right);
                     insertSingleCommand(lineNumber++,"STORE",left);
-                    insertSingleCommand(lineNumber++,"LOAD",regStore);
-                    insertSingleCommand(lineNumber++,"SHL",-1); // !!!!
-                    insertSingleCommand(lineNumber++,"INC",-1); // !!!!
-                    insertSingleCommand(lineNumber++,"STORE",regStore);
                     
                     insertSingleCommand(lineNumber++,"LOAD",right);
                     insertSingleCommand(lineNumber++,"SHR",-1);
                     insertSingleCommand(lineNumber++,"STORE",right);
-                    insertSingleCommand(lineNumber,"JUMP",lineNumber-21);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-14);
                     lineNumber++;
 
                     insertSingleCommand(lineNumber++,"LOAD",left);
