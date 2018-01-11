@@ -13,4 +13,9 @@ err:
 	./interpreter/interpreter output;			
 clean:
 	rm -f bison.c bison.h flex.c compiler
-	
+runSRC:
+	./compiler < ${SRC}
+	./interpreter/interpreter output;
+runSRC-BIG:
+	./compiler < ${SRC}
+	./interpreter/interpreter-cln output;

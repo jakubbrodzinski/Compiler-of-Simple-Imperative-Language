@@ -32,7 +32,7 @@ int yylex();
 void insertNumberIntoAccumulator(unsigned long long value);
 
 int reg=0;  //ktory aktualnie rejestr uzyć. mod 4
-int regMax=10;
+int regMax=8;
 int lineNumber=0;
 int loopCounter=0; // ktora to jest petla, tylko i wylacnzie do nazywania zmiennych na stosie
 int inWhileLoop=0; // inne zachowanie condition jezeli jest rowne 1
@@ -113,6 +113,10 @@ command         : identifier AS expression ENDL
                     }else{
                         insertSingleCommand(lineNumber++,"STOREI",$<retVar>1.memAddress);
                         //niech cała tablica bedzie 1 !!!!
+                        printf("name: %s\n size: %d\n memStart:%d\n",var->varName,var->varSize,var->memStart);
+                        for(int i=0;i<var->varSize;i++){
+                            memoryArray[var->memStart+i]=0;
+                        }
                     }
                 }
                 | IF 
@@ -1048,8 +1052,13 @@ int main(){
     insertNewVariable("R2",1,0,0);
     insertNewVariable("R3",1,0,0);
     insertNewVariable("R4",1,0,0);
+    insertNewVariable("R5",1,0,0);
+    insertNewVariable("R6",1,0,0);
+    insertNewVariable("R7",1,0,0);
+    insertNewVariable("R8",1,0,0);
     memoryArray[0]=memoryArray[1]=memoryArray[2]=memoryArray[3]=0;
-    construct(1000);
+    memoryArray[4]=memoryArray[5]=memoryArray[6]=memoryArray[7]=0;
+    construct(10000);
     yyparse();
     insertSingleCommand(lineNumber++,"HALT",-1);
     writeIntoFile("output");
