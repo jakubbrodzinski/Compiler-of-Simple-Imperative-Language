@@ -1,9 +1,13 @@
+( tab.imp )
 VAR
-   a[3]
+	n j ta[25] tb[25] tc[25]
 BEGIN
-   FOR i FROM 2 DOWNTO 0 DO
-       FOR j FROM 0 TO i DO
-           WRITE i;
-       ENDFOR
-   ENDFOR
+	n := 25 - 1;
+	tc[0] := n;
+	tc[n] := n - n;
+	FOR i FROM tc[0] DOWNTO tc[n] DO
+		WRITE n;
+		ta[i] := i;
+		tb[i] := n - i;
+	ENDFOR
 END

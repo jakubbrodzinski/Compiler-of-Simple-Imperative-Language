@@ -32,7 +32,7 @@ int yylex();
 void insertNumberIntoAccumulator(unsigned long long value);
 
 int reg=0;  //ktory aktualnie rejestr uzyć. mod 4
-int regMax=8;
+int regMax=10;
 int lineNumber=0;
 int loopCounter=0; // ktora to jest petla, tylko i wylacnzie do nazywania zmiennych na stosie
 int inWhileLoop=0; // inne zachowanie condition jezeli jest rowne 1
@@ -222,7 +222,7 @@ command         : identifier AS expression ENDL
                 }
                 | FOR V FROM value DOWNTO value 
                 {
-                    if($<retVar>4.isDirect==1){
+                    if($<retVar>6.isDirect==1){
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>6.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>6.memAddress);
@@ -1056,8 +1056,10 @@ int main(){
     insertNewVariable("R6",1,0,0);
     insertNewVariable("R7",1,0,0);
     insertNewVariable("R8",1,0,0);
+    insertNewVariable("R9",1,0,0);
+    insertNewVariable("R10",1,0,0);
     memoryArray[0]=memoryArray[1]=memoryArray[2]=memoryArray[3]=0;
-    memoryArray[4]=memoryArray[5]=memoryArray[6]=memoryArray[7]=0;
+    memoryArray[4]=memoryArray[5]=memoryArray[6]=memoryArray[7]=memoryArray[8]=memoryArray[9]=0;
     construct(10000);
     yyparse();
     insertSingleCommand(lineNumber++,"HALT",-1);
