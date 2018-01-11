@@ -1,0 +1,6 @@
+VAR
+	a b
+BEGIN
+	a:=13/5;
+	WRITE a;
+END

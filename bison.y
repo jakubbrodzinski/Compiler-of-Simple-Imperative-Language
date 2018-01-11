@@ -27,11 +27,12 @@ int popJump();
 
 int yyerror(char* error);
 int yyerror2(int errNumber,char* varName);
+void freeStructures();
 int yylex();
 void insertNumberIntoAccumulator(unsigned long long value);
 
 int reg=0;  //ktory aktualnie rejestr uzyć. mod 4
-int regMax=4;
+int regMax=10;
 int lineNumber=0;
 int loopCounter=0; // ktora to jest petla, tylko i wylacnzie do nazywania zmiennych na stosie
 int inWhileLoop=0; // inne zachowanie condition jezeli jest rowne 1
@@ -115,19 +116,12 @@ command         : identifier AS expression ENDL
                     }
                 }
                 | IF 
-                {
-                    printf("przed condtion.\n");
-                }
                 condition 
                 {
-                    printf("po condtion\n");
                     pushJump(lineNumber);
                     insertSingleCommand(lineNumber++,"JZERO",-1);
                 }
                 THEN comm_gram
-                {
-                    printf("KONIEC WSZYSTKIEGO!\n");
-                }
                 | WHILE 
                 {
                     inWhileLoop=1;
@@ -278,7 +272,7 @@ command         : identifier AS expression ENDL
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);//save RANGE
                     int jumpLine=popJump();
                     insertSingleCommand(lineNumber++,"JUMP",jumpLine);
-                    struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);      //TO-DO
+                    struct SingleCommand* lastJzero=getSingleCommandByIndex(jumpLine);
                     lastJzero->arg=lineNumber;
                     removeFromTop();
                     removeFromTop();
@@ -307,32 +301,23 @@ command         : identifier AS expression ENDL
                 ;
 comm_gram       : commands 
                 {
-                    printf("po commands\n");
                     int ifJump=popJump();
-                    struct SingleCommand* jZero=getSingleCommandByIndex(ifJump);      //TO-DO
+                    struct SingleCommand* jZero=getSingleCommandByIndex(ifJump);
                     jZero->arg=lineNumber;
                 }
                 ENDIF 
-                {
-                    printf("ENDIF!\n");
-                }
                 | commands {
-                    printf("po commands\n");
                     int ifJump=popJump();
                     pushJump(lineNumber);
                     insertSingleCommand(lineNumber++,"JUMP",-1);
-                    struct SingleCommand* jZero=getSingleCommandByIndex(ifJump);      //TO-DO
+                    struct SingleCommand* jZero=getSingleCommandByIndex(ifJump);
                     jZero->arg=lineNumber;
                 }
                 ELSE 
-                {
-                    printf("PO ELSIE\n");
-                }
                 commands ENDIF
                 {
-                    printf("KONIEC ELSA\n");
                     int elseJump=popJump();
-                    struct SingleCommand* elseCommand=getSingleCommandByIndex(elseJump);      //TO-DO
+                    struct SingleCommand* elseCommand=getSingleCommandByIndex(elseJump);
                     elseCommand->arg=lineNumber;
                 }
                 ;
@@ -376,7 +361,228 @@ expression      : value
                     $<retVar>$.varName="ACC";
                 }
                 | value MUL value
-                | value DIV value
+                {
+                    int left=-1;
+                    if($<retVar>1.isDirect==0){
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        left=reg;
+                        reg=(reg+1)%regMax;
+                    }else if(strcmp($<retVar>1.varName,"REG")!=0){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        left=reg;
+                        reg=(reg+1)%regMax;
+                    }else{
+                        left=$<retVar>1.memAddress;
+                    }
+                    //lewą zmienna mamy w rejestrze LEFT
+                    int right=-1;
+                    if($<retVar>3.isDirect==0){
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        right=reg;
+                        reg=(reg+1)%regMax;
+                    }else if(strcmp($<retVar>3.varName,"REG")!=0){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        right=reg;
+                        reg=(reg+1)%regMax;
+                    }else{
+                        right=$<retVar>3.memAddress;
+                    }
+                    //prawą zmienna mamy w rejestrze RIGHT
+                    int regStore=reg;
+                    reg=(reg+1)%regMax;
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",right);
+                    insertSingleCommand(lineNumber++,"SUB",left);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+17);//TO_DO do 425
+                    lineNumber++;
+                    //LEFT < RIGHT
+                    insertSingleCommand(lineNumber++,"LOAD",left);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+14);  //do 422
+                    lineNumber++;
+                    insertSingleCommand(lineNumber,"JODD",lineNumber+4);    //do 413
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"SHR",-1);
+                    insertSingleCommand(lineNumber++,"STORE",left);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+6);    //do 418
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"SHR",-1);
+                    insertSingleCommand(lineNumber++,"STORE",left);
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"ADD",right);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",right);
+                    insertSingleCommand(lineNumber++,"SHL",-1);
+                    insertSingleCommand(lineNumber++,"STORE",right);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-14);   //do 404
+                    lineNumber++;
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+16);//za 442
+                    lineNumber++;
+                    //LEFT >=RIGHT
+                    insertSingleCommand(lineNumber++,"LOAD",right);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+14);      //za 442
+                    lineNumber++;
+                    insertSingleCommand(lineNumber,"JODD",lineNumber+4);        //434
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"SHR",-1);
+                    insertSingleCommand(lineNumber++,"STORE",right);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+6);        //do 439
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"SHR",-1);
+                    insertSingleCommand(lineNumber++,"STORE",right);
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"ADD",left);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",left);
+                    insertSingleCommand(lineNumber++,"SHL",-1);
+                    insertSingleCommand(lineNumber++,"STORE",left);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-14);       //do 425
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    $<retVar>$.varName="ACC";
+                    
+                }
+                | value DIV value     //LEFT / RIGHT
+                {
+                    int left=-1;
+                    if($<retVar>1.isDirect==0){
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        left=reg;
+                        reg=(reg+1)%regMax;
+                    }else if(strcmp($<retVar>1.varName,"REG")!=0){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        left=reg;
+                        reg=(reg+1)%regMax;
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        left=reg;
+                        reg=(reg+1)%regMax;
+                    }
+                    //lewą zmienna mamy w rejestrze LEFT
+                    int right=-1;
+                    if($<retVar>3.isDirect==0){
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        right=reg;
+                        reg=(reg+1)%regMax;
+                    }else if(strcmp($<retVar>3.varName,"REG")!=0){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        right=reg;
+                        reg=(reg+1)%regMax;
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",reg);
+                        right=reg;
+                        reg=(reg+1)%regMax;
+                    }
+                    
+                    //prawą zmienna mamy w rejestrze RIGHT
+                    int regStore=reg;
+                    reg=(reg+1)%regMax;
+                    
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",left);
+                    insertSingleCommand(lineNumber++,"SHR",-1);
+                    insertSingleCommand(lineNumber++,"STORE",left);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+5);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-7);
+                    lineNumber++;
+
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"DEC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",right);
+                    insertSingleCommand(lineNumber++,"SHR",-1);
+                    insertSingleCommand(lineNumber++,"STORE",right);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+5);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"DEC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-7);
+                    lineNumber++;
+
+                    if($<retVar>1.isDirect==0){
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",left);
+                    }else if(strcmp($<retVar>1.varName,"REG")!=0){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",left);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>1.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",left);
+                    }
+                    //lewą zmienna mamy w rejestrze LEFT
+                    if($<retVar>3.isDirect==0){
+                        insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",right);
+                    }else if(strcmp($<retVar>3.varName,"REG")!=0){
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",right);
+                    }else{
+                        insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
+                        insertSingleCommand(lineNumber++,"STORE",right);
+                    }
+                    //left-dividend     right-divisor
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+7);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"DEC",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",right);
+                    insertSingleCommand(lineNumber++,"SHL",-1);
+                    insertSingleCommand(lineNumber++,"STORE",right);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-7);
+                    lineNumber++;
+                    
+                    insertSingleCommand(lineNumber++,"LOAD",left);
+                    insertSingleCommand(lineNumber++,"SUB",right);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+16);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"LOAD",right);
+                    insertSingleCommand(lineNumber++,"SUB",left);
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+5);   //LEFT >=RIGHT then TRUE
+                    lineNumber++;
+                    //DIVISOR SMALLER
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"SHL",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+8);
+                    lineNumber++;
+                    //TRUE!!
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"INC",-1);
+                    insertSingleCommand(lineNumber++,"SHL",-1);
+                    insertSingleCommand(lineNumber++,"STORE",regStore);
+                    insertSingleCommand(lineNumber++,"LOAD",left);
+                    insertSingleCommand(lineNumber++,"SUB",right);
+                    insertSingleCommand(lineNumber++,"STORE",left);
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber-17);
+                    lineNumber++;
+                    insertSingleCommand(lineNumber++,"LOAD",left);
+                    insertSingleCommand(lineNumber++,"PUT",-1);
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"PUT",-1);
+                    insertSingleCommand(lineNumber++,"LOAD",regStore);
+                    insertSingleCommand(lineNumber++,"PUT",-1);
+                    insertSingleCommand(lineNumber++,"ZERO",-1);
+                    insertSingleCommand(lineNumber++,"PUT",-1);
+                    
+                }
                 | value MOD value
                 ;
 
@@ -552,7 +758,7 @@ value           : NUMBER
                         //TO-DO
                     }else{
                         insertSingleCommand(lineNumber++,"STORE",reg);
-                        $<retVar>$.varName=NULL;
+                        $<retVar>$.varName="REG";
                         $<retVar>$.isArray=0;
                         $<retVar>$.memAddress=reg;
                         $<retVar>$.isDirect=1;
@@ -670,10 +876,14 @@ int main(){
     insertSingleCommand(lineNumber++,"HALT",-1);
     writeIntoFile("output");
     printf("STACK POINTER NA KONIEC: %d\n",stackPointer);
-    clearStack();
-    cleanUp();
+    freeStructures();
     free(memoryArray);
     return 0;
 }
 
-//TO-DO yyerror i cleanup!
+void freeStructures(){
+    cleanJumpStack();
+    clearStack();
+    cleanUp();
+}
+

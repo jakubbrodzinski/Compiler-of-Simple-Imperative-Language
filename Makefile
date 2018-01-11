@@ -5,6 +5,9 @@ all: bison.y flex.l
 run:
 	./compiler < ./myTest/test${NO}.imp
 	./interpreter/interpreter output;
+runBIG:
+	./compiler < ./myTest/test${NO}.imp
+	./interpreter/interpreter-cln output;
 err:
 	./compiler < ./test/error${NO}.imp
 	./interpreter/interpreter output;			

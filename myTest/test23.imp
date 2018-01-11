@@ -1,0 +1,11 @@
+VAR
+	x[10] a b c d y[10]
+BEGIN
+	x[0]:=15;
+	y[0]:=20;
+	a:=x[0]*y[0];
+	WRITE a;
+	b:=0;
+	c:=b*x[0];
+	WRITE c;
+END
