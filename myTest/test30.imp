@@ -3,7 +3,7 @@
 > 121393
 )
 VAR
-  tab[1234567890] a b c d e f g h i j k l m n o p q r s t u v w x y z
+  tab[1534567890] a b c d e f g h i j k l m n o p q r s t u v w x y z
 BEGIN
   READ tab[12345];
   a:=tab[12345];

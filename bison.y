@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-int* memoryArray;
+char* memoryArray;
 #include "variableStack.c"
 int isAlreadyDeclared(char * name);
 int insertNewVariable(char * name,int size,int isArr,int isIterator);
@@ -113,7 +113,7 @@ command         : identifier AS expression ENDL
                     }else{
                         insertSingleCommand(lineNumber++,"STOREI",$<retVar>1.memAddress);
                         //niech cała tablica bedzie 1 !!!!
-                        printf("name: %s\n size: %d\n memStart:%d\n",var->varName,var->varSize,var->memStart);
+                        //printf("name: %s\n size: %d\n memStart:%d\n",var->varName,var->varSize,var->memStart);
                         for(int i=0;i<var->varSize;i++){
                             memoryArray[var->memStart+i]=0;
                         }
@@ -1056,8 +1056,9 @@ int main(){
     construct(10000);
     yyparse();
     insertSingleCommand(lineNumber++,"HALT",-1);
+    printf("Kompilacja zakonczona, assembler wyjsciowy ma %d lini.\n",lineNumber);
     writeIntoFile("output");
-    printf("STACK POINTER NA KONIEC: %d\n",stackPointer);
+    //printf("STACK POINTER NA KONIEC: %d\n",stackPointer);
     freeStructures();
     free(memoryArray);
     return 0;

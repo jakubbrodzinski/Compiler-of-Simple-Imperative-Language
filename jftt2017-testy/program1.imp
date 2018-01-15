@@ -1,8 +1,8 @@
 ( sito Eratostenesa )
 VAR
-    n j sito[100]
+    n j sito[1000]
 BEGIN
-    n := 100-1;
+    n := 1000-1;
     FOR i FROM n DOWNTO 2 DO
         sito[i] := 1;
     ENDFOR

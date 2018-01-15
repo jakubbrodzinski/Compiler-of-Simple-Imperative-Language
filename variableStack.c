@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #ifndef VAR_LIST
 #define VAR_LIST
-extern int* memoryArray;
+extern char* memoryArray;
 struct variableStack{
     char* varName;
     int varSize;
@@ -41,7 +41,7 @@ int insertNewVariable(char * name,int size,int isArr,int isIterator){
     strcpy(var->varName,name);
     if(isArr){
         var->varSize=size;
-        memoryArray=(int*) realloc(memoryArray,(stackPointer+size+1)*sizeof(int));
+        memoryArray=(char*) realloc(memoryArray,(stackPointer+size+1)*sizeof(char));
         var->memStart=stackPointer+1;
         for(int i=stackPointer+1;i<stackPointer+size;i++)
             memoryArray[i]=-1;
@@ -51,7 +51,7 @@ int insertNewVariable(char * name,int size,int isArr,int isIterator){
     
     }else{
         var->varSize=1;
-        memoryArray=(int*) realloc(memoryArray,(stackPointer+1)*sizeof(int));
+        memoryArray=(char*) realloc(memoryArray,(stackPointer+1)*sizeof(char));
         var->memStart=stackPointer;
         for(int i=stackPointer;i<stackPointer+size;i++)
             memoryArray[i]=-1;
@@ -73,7 +73,7 @@ int insertLoopRange(int loopC){
     var->varName[2]=loopC+48;
     var->varName[3]='\0';
     var->varSize=1;
-    memoryArray=(int*) realloc(memoryArray,(stackPointer+1)*sizeof(int));
+    memoryArray=(char*) realloc(memoryArray,(stackPointer+1)*sizeof(char));
     var->memStart=stackPointer;
     memoryArray[stackPointer]=-1;
     stackPointer+=1;
@@ -109,7 +109,7 @@ int removeFromTop(){
             stackPointer=stackPointer-1;
     }
     stackPointer=stackPointer-(top->varSize);
-    memoryArray=(int*) realloc(memoryArray,stackPointer*sizeof(int));
+    memoryArray=(char*) realloc(memoryArray,stackPointer*sizeof(char));
     stack=stack->nextVar;
     free(top->varName);
     free(top);

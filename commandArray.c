@@ -17,7 +17,11 @@ struct SingleCommand* getSingleCommandByIndex(int index){
 }
 
 struct SingleCommand* insertSingleCommand(int index,char* com,int a){
-    commandArray[index].command=(char*) strdup(com);
+    if(index>=size){
+        commandArray=(struct SingleCommand*) realloc(commandArray,(size+1000)*sizeof(struct SingleCommand));
+        size+=1000;
+    }
+    commandArray[index].command=strdup(com);
     commandArray[index].arg=a;
     return commandArray+index;
 }
