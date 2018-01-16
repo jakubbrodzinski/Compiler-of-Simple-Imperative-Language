@@ -23,10 +23,10 @@
             printf("Zmienna '%s' jest tablicą.\n",varName);
             break;
         case 5:
-            printf("'%s' IndexOfOutBoundsEx\n",varName);
+            printf("'%s'- IndexOfOutBoundsEx\n",varName);
             break;
         case 6:
-            printf("'%s' Powtarzająca się deklaracja.\n",varName);
+            printf("Powtarzająca się deklaracja zmiennej '%s'.\n",varName);
             break;
         case 7:
             printf("Błędne znaki.\n");
@@ -93,7 +93,8 @@ WRITE       return WRITE;
                 return NUMBER;
             }
 [_a-z]+     {
-                yylval.string=strdup(yytext);
+                yylval.string=(char*) malloc((strlen(yytext)+1)*sizeof(char));
+                strcpy(yylval.string,yytext);
                 return V;
             }
 

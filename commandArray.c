@@ -7,7 +7,7 @@
 struct SingleCommand{
     char * command;
     //if -1 then no label. (arg==-1) ZERO , (arg=15) STORE 15
-    int arg;
+    long arg;
 };
 int size=0;
 struct SingleCommand* commandArray;
@@ -16,12 +16,13 @@ struct SingleCommand* getSingleCommandByIndex(int index){
     return commandArray+index;
 }
 
-struct SingleCommand* insertSingleCommand(int index,char* com,int a){
+struct SingleCommand* insertSingleCommand(int index,char* com,long a){
     if(index>=size){
         commandArray=(struct SingleCommand*) realloc(commandArray,(size+1000)*sizeof(struct SingleCommand));
         size+=1000;
     }
-    commandArray[index].command=strdup(com);
+    commandArray[index].command=(char *) malloc((strlen(com)+1)*sizeof(char));
+    strcpy(commandArray[index].command,com);
     commandArray[index].arg=a;
     return commandArray+index;
 }
@@ -52,7 +53,7 @@ void writeIntoFile(char* filename){
                 if(commandArray[i].arg==-1){
                     fprintf(fp, "%s\n",commandArray[i].command);
                 }else{
-                    fprintf(fp, "%s %d \n",commandArray[i].command,commandArray[i].arg);
+                    fprintf(fp, "%s %ld \n",commandArray[i].command,commandArray[i].arg);
                 }
                 if(strcmp(commandArray[i].command,"HALT")==0){
                     break;

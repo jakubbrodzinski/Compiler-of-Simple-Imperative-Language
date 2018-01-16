@@ -30,5 +30,4 @@ void cleanJumpStack(){
     while(stackJump!=NULL)
         popJump();
 }
-
 #endif

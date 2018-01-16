@@ -1,10 +1,11 @@
-FLAGS=-std=c99
+FLAGS=-std=c99 -Wall
+BISON_FLAG=-D_BSD_SOURCE
 all: compiler interpreter
 
 compiler: bison.y flex.l
 	bison -d bison.y -o bison.c
 	flex -o flex.c flex.l
-	gcc -o compiler bison.c flex.c $(FLAGS) -lm -lfl
+	gcc -o compiler bison.c flex.c $(FLAGS) $(BISON_FLAG) -lm -lfl
 interpreter:
 	g++ -Wall -std=c++11 interpreter.cc -o interpreter
 	g++ -Wall -std=c++11 interpreter-cln.cc -l cln -o interpreter-cln

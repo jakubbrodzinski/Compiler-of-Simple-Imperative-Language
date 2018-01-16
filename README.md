@@ -1,9 +1,14 @@
 # Compiler
 Projekt zawiera pliki:
+        Plik zawierający parser, w którym została zawarta logika kompilatora.
 	-bison.y
+        Plik zawierający lexer.
 	-flex.l
+        Struktura danych, która ma za zadanie przechowywać wyjściowego assemblera.
 	-commandArray.c
+        Prosta struktura danych wykorzystywana do implementacji skoków (zapamietująca linijki w których skoki się znajdowały) w petląch i if-elsach.
 	-jumpStack.c
+        Struktura danych reprezentująca taśmę pamięci 'p', w której zapamietujemy nazwy zmiennych oraz ich adresy.
 	-variableStack.c
 	-interpreter.cc
 	-interpreter-cln.cc
