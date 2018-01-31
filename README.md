@@ -1,5 +1,6 @@
 Compiler of simple imperative language. 
 1.Language's grammar:
+
     program -> VAR vdeclarations BEGIN commands END
 
     vdeclarations -> vdeclarations pidentifier
@@ -41,6 +42,7 @@ Compiler of simple imperative language.
  
  
 2.Project's files:
+
 	-bison.y
         Parser
 	-flex.l
@@ -56,6 +58,7 @@ Compiler of simple imperative language.
 	-Makefile
 
 Versions:
+
 	flex 2.6.0
 	bison (GNU Bison) 3.0.4
 	gcc (Ubuntu 5.4.0-6ubuntu1~16.04.5) 5.4.0 20160609
@@ -83,4 +86,6 @@ Build and run:
 	'make clean' removes all temporary and built files.
 	
 Additional info:
+	
     During compiling my simple compiler you can get some warnings. Thoose warnings are effect of using gcc and ANSI C instead of g++ and C++. Evertyhing works just fine.
+	
