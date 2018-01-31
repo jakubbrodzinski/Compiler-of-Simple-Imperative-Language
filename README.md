@@ -40,3 +40,9 @@ Uruchomienie:
 		'make excCLN'
 
 	Polecenie 'make clean' czyści wszystkie wygenerowane pliki przez flexa/bisona/gcc/kompilator.
+	
+Dodatkowa informacja:
+    Flaga "-D_BSD_SOURCE" jest konieczna aby wyeliminować poniżej przdstawiony warning pochodzący z bisona/flexa. W przypadku problemów, mozna sprobwać skompilować projekt bez tej flagi.
+        "flex.c:1643:48: warning: implicit declaration of function ‘fileno’ [-Wimplicit-function-declaration]
+         b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;"
+

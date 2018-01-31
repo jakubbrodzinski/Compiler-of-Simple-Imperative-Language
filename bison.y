@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+//char* memoryArray;
 #include "variableStack.c"
 int isAlreadyDeclared(char * name);
 int insertNewVariable(char * name,long size,int isArr,int isIterator);
@@ -108,10 +109,13 @@ command         : identifier AS expression ENDL
                     }
                     if($<retVar>1.isDirect==1){
                         insertSingleCommand(lineNumber++,"STORE",$<retVar>1.memAddress);
+                        //memoryArray[$<retVar>1.memAddress]=0; ISSUE!
                         var->isUsed=0;
                     }else{
                         insertSingleCommand(lineNumber++,"STOREI",$<retVar>1.memAddress);
+                        //niech cała tablica bedzie 1 !!!!
                         //printf("name: %s\n size: %d\n memStart:%d\n",var->varName,var->varSize,var->memStart);
+                        //for(int i=0;i<var->varSize;i++){memoryArray[var->memStart+i]=0;}
                         var->isUsed=0;
                     }
                 }
@@ -178,6 +182,7 @@ command         : identifier AS expression ENDL
                         yyerror2(6,$<string>2);
                     }
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
 
                     if($<retVar>6.isDirect==1){
@@ -196,6 +201,7 @@ command         : identifier AS expression ENDL
                     loopCounter++;
                     insertLoopRange(loopCounter);
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
                     pushJump(lineNumber);
                     insertSingleCommand(lineNumber++,"JZERO",-2);
@@ -245,7 +251,7 @@ command         : identifier AS expression ENDL
                         yyerror2(6,$<string>2);
                     }
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
-
+                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
 
                     if($<retVar>6.isDirect==1){
@@ -259,6 +265,7 @@ command         : identifier AS expression ENDL
                     loopCounter++;
                     insertLoopRange(loopCounter);
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
+                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
                     pushJump(lineNumber);
                     insertSingleCommand(lineNumber++,"JZERO",-2);
@@ -284,6 +291,7 @@ command         : identifier AS expression ENDL
                     if($<retVar>2.isDirect==1){
                         //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"STORE",$<retVar>2.memAddress);
+                        //memoryArray[$<retVar>2.memAddress]=0;
                         getVariableFromMemory($<retVar>2.memAddress)->isUsed=0;
                     }else{
                         insertSingleCommand(lineNumber++,"STOREI",$<retVar>2.memAddress);
@@ -561,6 +569,7 @@ expression      : value
                     lineNumber++;
 
                     //main LOOP!! WHILE right >= <retVar>3.memAddress
+                    //DO POPRWAY!! Z IFEM
                     if($<retVar>3.isDirect==1){
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
                     }else{
@@ -718,6 +727,7 @@ expression      : value
                     lineNumber++;
 
                     //main LOOP!! WHILE right >= <retVar>3.memAddress
+                    //DO POPRWAY!! Z IFEM
                     if($<retVar>3.isDirect==1){
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
                     }else{
@@ -937,6 +947,7 @@ value           : NUMBER
                 }
                 | identifier
                 {
+                //  if(memoryArray[$<retVar>1.memAddress]==-1){
                     if(getVariableFromMemory($<retVar>1.memAddress)->isUsed==-1){
                         yyerror2(2,$<retVar>1.varName);
                     }
@@ -968,7 +979,7 @@ identifier      : V
                         yyerror2(1,$<string>3);
                     }else if (var3->isArray==1){
                         yyerror2(3,$<string>3);
-                    }else if(var3->isUsed==-1){
+                    }else if(var3->isUsed==-1){ //else if(memoryArray[var3->memStart]==-1){
                         yyerror2(2,$<string>3);
                     }
                     VariableStack* var1=getVariableByName($<string>1);
@@ -984,6 +995,7 @@ identifier      : V
                     if(inWhileLoop==1){
                         numberLoaded++;
                         insertLoopRange(loopCounter++);
+                        //memoryArray[stackPointer-1]=0;
                         getVariableFromMemory(stackPointer-1)->isUsed=0;
                         
                         $<retVar>$.memAddress=stackPointer-1;
@@ -1050,6 +1062,8 @@ int main(){
     for(int i=0;i<regMax;i++){
         getVariableFromMemory(i)->isUsed=0;
     }
+    //memoryArray[0]=memoryArray[1]=memoryArray[2]=memoryArray[3]=0;
+    //memoryArray[4]=memoryArray[5]=memoryArray[6]=memoryArray[7]=memoryArray[8]=memoryArray[9]=0;
     construct(10000);
     yyparse();
     insertSingleCommand(lineNumber++,"HALT",-1);
@@ -1057,6 +1071,7 @@ int main(){
     writeIntoFile("output");
     //printf("STACK POINTER NA KONIEC: %d\n",stackPointer);
     freeStructures();
+    //free(memoryArray);
     return 0;
 }
 
