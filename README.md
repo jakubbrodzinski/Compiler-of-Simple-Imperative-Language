@@ -1,48 +1,86 @@
-# Compiler
-Projekt zawiera pliki:
-        Plik zawierający parser, w którym została zawarta logika kompilatora.
+Compiler of simple imperative language. 
+1.Language's grammar:
+    program -> VAR vdeclarations BEGIN commands END
+
+    vdeclarations -> vdeclarations pidentifier
+        | vdeclarations pidentifier [num]
+        | /*epsilon*/
+
+    commands -> commands command
+        | command
+
+    command -> identifier := expression ;
+        | IF condition THEN commands ELSE commands ENDIF
+        | IF condition THEN commands ENDIF
+        | WHILE condition DO commands ENDWHILE
+        | FOR pidentifier FROM value TO value DO commands ENDFOR
+        | FOR pidentifier FROM value DOWNTO value DO commands ENDFOR
+        | READ identifier ;
+        | WRITE value ;
+
+    expression -> value
+        | value + value
+        | value - value
+        | value * value
+        | value / value
+        | value % value
+
+    condition -> value = value
+        | value <> value
+        | value < value
+        | value > value
+        | value <= value
+        | value >= value
+
+    value -> num
+        | identifier
+
+    identifier -> pidentifier
+        | pidentifier [ pidentifier ]
+        | pidentifier [num]
+ 
+ 
+2.Project's files:
 	-bison.y
-        Plik zawierający lexer.
+        Parser
 	-flex.l
-        Struktura danych, która ma za zadanie przechowywać wyjściowego assemblera.
+        Lexer
 	-commandArray.c
-        Prosta struktura danych wykorzystywana do implementacji skoków (zapamietująca linijki w których skoki się znajdowały) w petląch i if-elsach.
+        Data structure where asembler's commands are stored.
 	-jumpStack.c
-        Struktura danych reprezentująca taśmę pamięci 'p', w której zapamietujemy nazwy zmiennych oraz ich adresy.
+        Simple stack that is used to implementing jumps in compiler, that are used in loops, branches (if/else).
 	-variableStack.c
+        Linked list that stored declared variables and their's addresses.
 	-interpreter.cc
 	-interpreter-cln.cc
 	-Makefile
 
-Wersje:
+Versions:
 	flex 2.6.0
 	bison (GNU Bison) 3.0.4
 	gcc (Ubuntu 5.4.0-6ubuntu1~16.04.5) 5.4.0 20160609
 
-Uruchomienie:
+Build and run:
 
-	Aby zbudowac projekt możemy użyc polecenia 'make' lub też poleceń 'make compiler' (który buduje kompilator) oraz 'make interpreter' (które buduje interpreter).
-
-	Aby program skompilować i uruchomic nalezy użyć polecenia:
+    To build whole project use 'make' or 'make compiler' to build ONLY compiler (without interpreter). To build interpreter use 'make interpreter'.
+	
+	To compile and run your code use command:
 		'make run SRC=path'
-	lub dla interpretera CLN:
+	or for CLN interpreter:
 		'make runCLN SRC=path'
-	gdzie 'path' to scieżka do pliku z kodem źródłowym.
+	where 'path' is path to text file with code.
 
-	Wyjściowy assembler trafia zawsze to pliku o nazwie 'output'.
+	Output of the compiler (assembler) is always in the file named 'output' in compilers' directory.
 
-	Aby kod źródłowy jedynie skompilować (bez uruchomienia w interpreterze) należy użyc:
+	To only compile code (without executing it) use:
 		'make compile SRC=path'
 
-	Aby uruchomic assembler używamy (pamietając, że kod assemblerowy musi być w pliku o nazwie 'output' !):
+	To execute assembler from file named 'output' use:
 		'make exc'
-	lub
+	or with interpreter CLN:
 		'make excCLN'
 
-	Polecenie 'make clean' czyści wszystkie wygenerowane pliki przez flexa/bisona/gcc/kompilator.
+	'make clean' removes all temporary and built files.
 	
-Dodatkowa informacja:
-    Flaga "-D_BSD_SOURCE" jest konieczna aby wyeliminować poniżej przdstawiony warning pochodzący z bisona/flexa. W przypadku problemów, mozna sprobwać skompilować projekt bez tej flagi.
-        "flex.c:1643:48: warning: implicit declaration of function ‘fileno’ [-Wimplicit-function-declaration]
-         b->yy_is_interactive = file ? (isatty( fileno(file) ) > 0) : 0;"
-
+Additional info:
+    During compiling my simple compiler you can get some warnings. Thoose warnings are effect of using gcc and ANSI C instead of g++ and C++. Evertyhing works just fine.
