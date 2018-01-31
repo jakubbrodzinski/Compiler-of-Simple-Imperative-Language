@@ -109,7 +109,6 @@ int removeFromTop(){
 VariableStack* getFromTop(){
     return stack;
 }
-//SPRAWDZIC!
 VariableStack* getVariableFromMemory(long memoryCell){
     VariableStack* temp=stack;
     if(temp->memStart+temp->varSize-1<memoryCell)

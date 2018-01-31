@@ -1,0 +1,1 @@
+Nasz assembler nie miał dostępnych rejestrów co dosyć utrudniało prace na jakiś zmiennych (szczególnie tablicowych). Mielismy dostęp jedynie do akumulatora tak wiec pierwsze kilka (uznałem, że 10 to bezpieczna wartość, aby NA PEWNO wszystkie testy przeszły, aczkolwiek przy 3-4 juz powinno wzsystko być OK) komórek pamięci zachowują się jak rejestry i są do tego zarezerwowane.

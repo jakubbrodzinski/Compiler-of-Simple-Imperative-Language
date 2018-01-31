@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-//char* memoryArray;
 #include "variableStack.c"
 int isAlreadyDeclared(char * name);
 int insertNewVariable(char * name,long size,int isArr,int isIterator);
@@ -161,7 +160,6 @@ command         : identifier AS expression ENDL
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>4.memAddress);
                     }
                     if($<retVar>6.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>6.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>6.memAddress);
@@ -182,7 +180,6 @@ command         : identifier AS expression ENDL
                         yyerror2(6,$<string>2);
                     }
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
-                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
 
                     if($<retVar>6.isDirect==1){
@@ -201,7 +198,6 @@ command         : identifier AS expression ENDL
                     loopCounter++;
                     insertLoopRange(loopCounter);
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
-                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
                     pushJump(lineNumber);
                     insertSingleCommand(lineNumber++,"JZERO",-2);
@@ -230,15 +226,14 @@ command         : identifier AS expression ENDL
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>6.memAddress);
                     }
                     if($<retVar>4.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>4.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>4.memAddress);
                     }
-                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3); // zmiana
+                    insertSingleCommand(lineNumber,"JZERO",lineNumber+3);
                     lineNumber++;
                     insertSingleCommand(lineNumber++,"ZERO",-1);
-                    insertSingleCommand(lineNumber,"JUMP",lineNumber+5);    //zmiana
+                    insertSingleCommand(lineNumber,"JUMP",lineNumber+5);
                     lineNumber++;
                     
                     if($<retVar>4.isDirect==1){
@@ -251,21 +246,17 @@ command         : identifier AS expression ENDL
                         yyerror2(6,$<string>2);
                     }
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
-                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
 
                     if($<retVar>6.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>6.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>6.memAddress);
                     }
                     insertSingleCommand(lineNumber++,"INC",-1);
-                    //TO-DO!!! zrobic jakis glupi licznik
                     loopCounter++;
                     insertLoopRange(loopCounter);
                     insertSingleCommand(lineNumber++,"STORE",stackPointer-1);
-                    //memoryArray[stackPointer-1]=0;
                     getVariableFromMemory(stackPointer-1)->isUsed=0;
                     pushJump(lineNumber);
                     insertSingleCommand(lineNumber++,"JZERO",-2);
@@ -300,7 +291,6 @@ command         : identifier AS expression ENDL
                 | WRITE value ENDL
                 {
                     if($<retVar>2.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>2.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>2.memAddress);
@@ -346,7 +336,6 @@ expression      : value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
                     }
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"ADD",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"ADDI",$<retVar>3.memAddress);
@@ -362,7 +351,6 @@ expression      : value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
                     }
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
@@ -569,7 +557,6 @@ expression      : value
                     lineNumber++;
 
                     //main LOOP!! WHILE right >= <retVar>3.memAddress
-                    //DO POPRWAY!! Z IFEM
                     if($<retVar>3.isDirect==1){
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
                     }else{
@@ -776,7 +763,6 @@ condition       : value EQ value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
                     }
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
@@ -786,7 +772,6 @@ condition       : value EQ value
                     insertSingleCommand(lineNumber,"JUMP",lineNumber+4);
                     lineNumber++;
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
@@ -813,7 +798,6 @@ condition       : value EQ value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
                     }
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
@@ -823,7 +807,6 @@ condition       : value EQ value
                     insertSingleCommand(lineNumber,"JUMP",lineNumber+4);
                     lineNumber++;
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"LOAD",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
@@ -848,7 +831,6 @@ condition       : value EQ value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
                     }
                     if($<retVar>1.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>1.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>1.memAddress);
@@ -868,7 +850,6 @@ condition       : value EQ value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
                     }
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
@@ -888,7 +869,6 @@ condition       : value EQ value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>1.memAddress);
                     }
                     if($<retVar>3.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>3.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>3.memAddress);
@@ -910,7 +890,6 @@ condition       : value EQ value
                         insertSingleCommand(lineNumber++,"LOADI",$<retVar>3.memAddress);
                     }
                     if($<retVar>1.isDirect==1){
-                        //co jesli to jest array!?
                         insertSingleCommand(lineNumber++,"SUB",$<retVar>1.memAddress);
                     }else{
                         insertSingleCommand(lineNumber++,"SUBI",$<retVar>1.memAddress);
@@ -947,7 +926,6 @@ value           : NUMBER
                 }
                 | identifier
                 {
-                //  if(memoryArray[$<retVar>1.memAddress]==-1){
                     if(getVariableFromMemory($<retVar>1.memAddress)->isUsed==-1){
                         yyerror2(2,$<retVar>1.varName);
                     }
@@ -961,7 +939,6 @@ value           : NUMBER
 identifier      : V
                 {
                     VariableStack* var=getVariableByName($<string>1);
-                    //printf("%s-%d-%d-%d\n",var->varName,var->isArray,var->memStart,var->varSize);
                     if(var==NULL){
                         yyerror2(1,$<string>1);
                     }else if (var->isArray==1){
@@ -979,7 +956,7 @@ identifier      : V
                         yyerror2(1,$<string>3);
                     }else if (var3->isArray==1){
                         yyerror2(3,$<string>3);
-                    }else if(var3->isUsed==-1){ //else if(memoryArray[var3->memStart]==-1){
+                    }else if(var3->isUsed==-1){ 
                         yyerror2(2,$<string>3);
                     }
                     VariableStack* var1=getVariableByName($<string>1);
@@ -991,11 +968,9 @@ identifier      : V
                     
                     insertSingleCommand(lineNumber++,"LOAD",var1->memStart-1);
                     insertSingleCommand(lineNumber++,"ADD",var3->memStart);
-                    //printf("%s-%d-%d-%d\n",var3->varName,var3->isArray,var3->memStart,var3->varSize);
                     if(inWhileLoop==1){
                         numberLoaded++;
                         insertLoopRange(loopCounter++);
-                        //memoryArray[stackPointer-1]=0;
                         getVariableFromMemory(stackPointer-1)->isUsed=0;
                         
                         $<retVar>$.memAddress=stackPointer-1;
@@ -1062,8 +1037,6 @@ int main(){
     for(int i=0;i<regMax;i++){
         getVariableFromMemory(i)->isUsed=0;
     }
-    //memoryArray[0]=memoryArray[1]=memoryArray[2]=memoryArray[3]=0;
-    //memoryArray[4]=memoryArray[5]=memoryArray[6]=memoryArray[7]=memoryArray[8]=memoryArray[9]=0;
     construct(10000);
     yyparse();
     insertSingleCommand(lineNumber++,"HALT",-1);
@@ -1071,7 +1044,6 @@ int main(){
     writeIntoFile("output");
     //printf("STACK POINTER NA KONIEC: %d\n",stackPointer);
     freeStructures();
-    //free(memoryArray);
     return 0;
 }
 
