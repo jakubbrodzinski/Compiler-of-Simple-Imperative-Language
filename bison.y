@@ -6,6 +6,7 @@
 #include "variableStack.c"
 int isAlreadyDeclared(char * name);
 int insertNewVariable(char * name,long size,int isArr,int isIterator);
+int insertNewVariableWithStartIndex(char * name,long size,int isArr,int startIndex, int isIterator);
 int removeFromTop();
 void clearStack();
 VariableStack* getFromTop();
@@ -62,7 +63,7 @@ extern long stackPointer;
 %token <string> IF THEN ELSE ENDIF
 %token <string> READ WRITE
 %token <string> ADD SUB MUL DIV MOD
-%token <string> EQ NEQ LE GE LEQ GEQ AS LEFT RIGHT ENDL
+%token <string> EQ NEQ LE GE LEQ GEQ AS LEFT RIGHT ARR ENDL
 %token <string> V
 %token <value> NUMBER
 
@@ -75,9 +76,13 @@ vdeclarations   : vdeclarations V
                         yyerror2(6,$<string>2);
                     }
                 }
-                | vdeclarations V LEFT NUMBER RIGHT
-                {
-                    if(insertNewVariable($<string>2,$<value>4,1,0)==-1){
+                | vdeclarations V LEFT NUMBER ARR NUMBER RIGHT
+                {//2020
+                    if($<value>4 > $<value>6){
+                        yyerror2(7,$<string>2);
+                    }
+                    int len = $<value>6 - $<value>4 + 1;
+                    if(insertNewVariableWithStartIndex($<string>2,len,1,$<value>4,0)==-1){
                         yyerror2(6,$<string>2);
                     }
                     VariableStack* var=getVariableByName($<string>2);
@@ -950,7 +955,7 @@ identifier      : V
                     $<retVar>$.isDirect=1;
                 }
                 | V LEFT V RIGHT
-                {
+                {//2020
                     VariableStack* var3=getVariableByName($<string>3);
                     if(var3==NULL){
                         yyerror2(1,$<string>3);
@@ -985,17 +990,17 @@ identifier      : V
                 }
                 | V LEFT NUMBER RIGHT
                 {
-                    VariableStack* var1=getVariableByName($<string>1);
+                    VariableStack* var1=getVariableByName($<string>1); 
                     if(var1==NULL){
                         yyerror2(1,$<string>1);
                     }else if (var1->isArray==0){
                         yyerror2(3,$<string>1);
-                    }else if(var1->varSize <= $<value>3){
+                    }else if(var1->varSize <= $<value>3-var1->startIndex){
                         yyerror2(5,$<string>1);
                     }
                     $<retVar>$.varName=var1->varName;
                     $<retVar>$.isArray=var1->isArray;
-                    $<retVar>$.memAddress=var1->memStart+$<value>3;
+                    $<retVar>$.memAddress=var1->memStart+$<value>3-var1->startIndex;
                     $<retVar>$.isDirect=1;
                 }
                 ;

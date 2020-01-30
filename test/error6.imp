@@ -1,7 +1,0 @@
-( Błąd w linii 5: niewłaściwy znak '-' ={WHITE}\*"-"{NUMBER}+   { printf("JD!\n"); })
-VAR
-  a b
-BEGIN
-  b := -3;
-  a := b;
-END

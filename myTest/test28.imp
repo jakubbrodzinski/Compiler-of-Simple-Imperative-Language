@@ -1,9 +1,0 @@
-VAR
-	a b
-BEGIN
-	READ a;
-	FOR i FROM 1 TO a DO
-		WRITE a;
-		a:=a/2;
-	ENDFOR
-END

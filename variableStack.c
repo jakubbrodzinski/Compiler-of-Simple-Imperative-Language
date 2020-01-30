@@ -7,6 +7,7 @@ struct variableStack{
     char* varName;
     long varSize;
     int isArray;
+    int startIndex;
     long memStart;
     int varType;
     int isUsed;
@@ -33,6 +34,10 @@ int isAlreadyDeclared(char * name){
  *  1 - OK
  */
 int insertNewVariable(char * name,long size,int isArr,int isIterator){
+    return insertNewVariableWithStartIndex(name,size,isArr,0,isIterator);
+}
+
+int insertNewVariableWithStartIndex(char * name,long size,int isArr,int startIndex,int isIterator){
     if(isAlreadyDeclared(name)){
         return -1;
     }
@@ -49,6 +54,7 @@ int insertNewVariable(char * name,long size,int isArr,int isIterator){
         stackPointer+=1;            
     }
     var->isArray=isArr;
+    var->startIndex=startIndex;
     var->varType=isIterator;
     var->isUsed=-1;
 

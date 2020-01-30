@@ -71,21 +71,22 @@ ENDIF       return ENDIF;
 READ        return READ;
 WRITE       return WRITE;
 
-"+"         return ADD;
-"-"         return SUB;
-"*"         return MUL;
-"/"         return DIV;
-"%"         return MOD;
+PLUS        return ADD;
+MINUS       return SUB;
+TIMES       return MUL;
+DIV         return DIV;
+MOD         return MOD;
 
-"="         return EQ;
-"<>"        return NEQ;
-"<"         return LE;
-">"         return GE;
-"<="        return LEQ;
-">="        return GEQ;
-":="        return AS;
-"["         return LEFT;
-"]"         return RIGHT;
+EQ          return EQ;
+NEW         return NEQ;
+LE          return LE;
+GE          return GE;
+LEQ         return LEQ;
+GEQ         return GEQ;
+ASSIGN      return AS;
+"("         return LEFT;
+")"         return RIGHT;
+":"         return ARR;
 ";"         return ENDL;
 
 {NUMBER}    {
@@ -98,10 +99,10 @@ WRITE       return WRITE;
                 return V;
             }
 
-\(                   BEGIN(COMMENT);
+\[                   BEGIN(COMMENT);
 <COMMENT><<EOF>>    yyerror2(8,NULL);
-<COMMENT>[^\)]*      ;
-<COMMENT>\)          BEGIN(INITIAL);
+<COMMENT>[^\]]*      ;
+<COMMENT>\]          BEGIN(INITIAL);
 
 {WHITE}     ;
 \n          lineno++;
